@@ -96,10 +96,10 @@ int main()
 
 
     print_tiso(base_x, 0);
-    print_try(base_x, 0);
-    print_ahmad(base_x, 0);
-    print_fikri(base_x, 0);
-    print_fauzan(base_x, 0);
+    /* print_try(base_x, 0); */
+    /* print_ahmad(base_x, 0); */
+    /* print_fikri(base_x, 0); */
+    /* print_fauzan(base_x, 0); */
 
     clear_screen();
 
@@ -322,30 +322,32 @@ void print_tiso(int base_x, int pos) {
     int i = vinfo.yres - 250 - pos;
 
     /* T */
-    add_box(&l, base_x, i, 160, 40);
-    add_box(&l, base_x + 65 , i + 40, 40, 200);
+    add_box(&l, base_x, 100, 160, 40);
 
-    /* I */
-    add_box(&l, base_x + 180, i, 40, 240);
+    /* add_box(&l, base_x + 65 , i + 40, 40, 200); */
 
-    /* S */
-    add_box(&l, base_x + 240, i, 160, 40);
-    add_box(&l, base_x + 240, i + 100, 160, 40);
-    add_box(&l, base_x + 240, i + 200, 160, 40);
-    add_box(&l, base_x + 240, i + 40, 40, 60);
-    add_box(&l, base_x + 360, i + 140, 40, 60);
+    /* /1* I *1/ */
+    /* add_box(&l, base_x + 180, i, 40, 240); */
+
+    /* /1* S *1/ */
+    /* add_box(&l, base_x + 240, i, 160, 40); */
+    /* add_box(&l, base_x + 240, i + 100, 160, 40); */
+    /* add_box(&l, base_x + 240, i + 200, 160, 40); */
+    /* add_box(&l, base_x + 240, i + 40, 40, 60); */
+    /* add_box(&l, base_x + 360, i + 140, 40, 60); */
 
 
-    /* O */
-    add_box(&l, base_x + 420, i, 160, 40);
-    add_box(&l, base_x + 420, i + 200, 160, 40);
-    add_box(&l, base_x + 420, i + 40, 40, 160);
+    /* /1* O *1/ */
+    /* add_box(&l, base_x + 420, i, 160, 40); */
+    /* add_box(&l, base_x + 420, i + 200, 160, 40); */
+    /* add_box(&l, base_x + 420, i + 40, 40, 160); */
 
-    add_box(&l, base_x + 540, i + 40, 40, 160);
+    /* add_box(&l, base_x + 540, i + 40, 40, 160); */
 
-    box letter = {base_x, i, vinfo.xres -10, 240 };
-    draw_letter(&l);
-    move_box(&letter,&l, -i, -i);
+    box letter = {base_x, 300, 100, 100 };
+    //draw_letter(&l);
+    draw_box(&letter);
+    move_box(&letter,NULL, -200, -200);
 }
 
 void clear_screen() {
@@ -371,9 +373,9 @@ void draw_box(box *b)
             location = (ix+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (iy+vinfo.yoffset)*finfo.line_length;
             if (vinfo.bits_per_pixel == 32) {
                 *(fbp + location) = bu;        // Some blue
-                *(fbp + location + 1) = g ;     // A little green
-                *(fbp + location + 2) = r ;    // A lot of red
-                *(fbp + location + 3) = 0;      // No transparency
+                *(fbp + location + 1) = 255 ;     // A little green
+                *(fbp + location + 2) = 255 ;    // A lot of red
+                *(fbp + location + 3) = 255;      // No transparency
             } else  { //assume 16bpp
                 int c = 10;
                 int g = (((b->x)-100)/6 )%255;     // A little green
@@ -425,35 +427,38 @@ void move_box(box *b, letter *l, int cur_delta_y, int final_delta_y)
     int initial_offsetx_loc = offsetx_location_inc * vinfo.xoffset;
     int initial_offsety_loc = offsety_location_inc * vinfo.yoffset;
 
-    /* Offeset Tujuan */
-    int offset_dest;
-
-    /* Setiap Iterasi, current delta di increment */
-    if (final_delta_y > 0)                            /* jika delta > 0, offset box ditambah 1 */
-        offset_dest = b->offsety + 1;
-    else
-        offset_dest = b->offsety - 1;
 
     /* Lokasi awal / offset awal */
     long int initial_location = initial_offsetx_loc + ( b->offsetx * offsetx_location_inc )  + initial_offsety_loc + (b->offsety * offsety_location_inc);
 
-    /* Update offset box */
-    b->offsety = offset_dest;
-
     /* finished_location : lokasi setelah iterasi ini berakhir */
-    long int finished_location = initial_offsetx_loc + ( b->offsetx * offsetx_location_inc )  + initial_offsety_loc + (offset_dest * offsety_location_inc);
 
-    memcpy(fbp + finished_location, fbp + initial_location, b->y * offsety_location_inc);
-    /* Set warna initial menjadi warna background */
     if (final_delta_y > 0) {
-        memset(fbp + initial_location, 0, offsety_location_inc);
-        usleep(10000);
+        long int finished_location = initial_location + (1 * offsety_location_inc);
+        for (int i = b->y - 1; i >= 0; i--) {
+            memcpy(fbp + finished_location + (i * offsety_location_inc), fbp + initial_location + (i * offsety_location_inc), b->x*4);
+        }
+        memset(fbp + initial_location, 0, 4*b->x);
+    } else {
+        long int finished_location = initial_location - (2 *offsety_location_inc);
+        for (int i = 0; i < b->y; i++) {
+            memcpy(fbp + finished_location + (i * offsety_location_inc), fbp + initial_location + (i * offsety_location_inc), b->x*4);
+        }
+        memset(fbp + initial_location + (b->y * offsety_location_inc), 0, 4*b->x);
+
+    }
+
+
+    if (final_delta_y > 0) {
+        b->offsety ++;
+        usleep(30000);
         move_box(b, l, cur_delta_y - 1, final_delta_y);
     } else {
-        memset(fbp + (b->y + b->offsety) * offsety_location_inc, 0, offsety_location_inc);
-        usleep(10000);
+        b->offsety --;
+        usleep(30000);
         move_box(b, l, cur_delta_y + 1, final_delta_y);
     }
+
 }
 
 void add_box(letter *l, int offsetx, int offsety, int x, int y)
@@ -469,6 +474,5 @@ void draw_diagonal(letter *l, int i, int base_x) {
     for(j=0;j<85;j++) {
         add_box(l, base_x + 235+j, i + 125 + j, 45, 1);
     }
-
 }
 

@@ -113,7 +113,7 @@ int main(int argc, char const *argv[])
 	system("clear");
     drawLine(x0, x1, y0, y1);
 
-    box line = {x0, y0, abs(x1-x0), abs(y1-y0+1)};
+    box line = {vinfo.xoffset, y0, abs(vinfo.xoffset-vinfo.xres), abs(y1-y0+1)};
     move_box(&line, NULL, 100, 100);
 
     // Unmap the device from memory
@@ -122,7 +122,6 @@ int main(int argc, char const *argv[])
 
     return 0;
 }
-
 void move_box(box *b, letter *l, int cur_delta_y, int final_delta_y)
 {
     if (cur_delta_y == 0)
@@ -140,33 +139,37 @@ void move_box(box *b, letter *l, int cur_delta_y, int final_delta_y)
     int initial_offsetx_loc = offsetx_location_inc * vinfo.xoffset;
     int initial_offsety_loc = offsety_location_inc * vinfo.yoffset;
 
-    /* Offeset Tujuan */
-    int offset_dest;
-
-    /* Setiap Iterasi, current delta di increment */
-    if (final_delta_y > 0)                            /* jika delta > 0, offset box ditambah 1 */
-        offset_dest = b->offsety + 1;
-    else
-        offset_dest = b->offsety - 1;
 
     /* Lokasi awal / offset awal */
     long int initial_location = initial_offsetx_loc + ( b->offsetx * offsetx_location_inc )  + initial_offsety_loc + (b->offsety * offsety_location_inc);
 
-    /* Update offset box */
-    b->offsety = offset_dest;
-
     /* finished_location : lokasi setelah iterasi ini berakhir */
-    long int finished_location = initial_offsetx_loc + ( b->offsetx * offsetx_location_inc )  + initial_offsety_loc + (offset_dest * offsety_location_inc);
 
-    memcpy(fbp + finished_location, fbp + initial_location, b->y * offsety_location_inc);
-    /* Set warna initial menjadi warna background */
     if (final_delta_y > 0) {
-        memset(fbp + initial_location, 0, offsety_location_inc);
-        usleep(10000);
+        long int finished_location = initial_location + (1 * offsety_location_inc);
+        for (int i = b->y - 1; i >= 0; i--) {
+            memcpy(fbp + finished_location + (i * offsety_location_inc), fbp + initial_location + (i * offsety_location_inc), b->x*4);
+        }
+        memset(fbp + initial_location, 0, 4*b->x);
+    } else {
+        long int finished_location = initial_location - (2 *offsety_location_inc);
+        for (int i = 0; i < b->y; i++) {
+            memcpy(fbp + finished_location + (i * offsety_location_inc), fbp + initial_location + (i * offsety_location_inc), b->x*4);
+        }
+        memset(fbp + initial_location + (b->y * offsety_location_inc), 0, 4*b->x);
+
+    }
+
+
+    if (final_delta_y > 0) {
+        b->offsety ++;
+        usleep(30000);
         move_box(b, l, cur_delta_y - 1, final_delta_y);
     } else {
-        memset(fbp + (b->y + b->offsety) * offsety_location_inc, 0, offsety_location_inc);
-        usleep(10000);
+        b->offsety --;
+        usleep(30000);
         move_box(b, l, cur_delta_y + 1, final_delta_y);
     }
+
 }
+
