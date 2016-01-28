@@ -47,8 +47,8 @@ class Thing {
 
         /* Thing's method, yang berhubungan dengan penggambaran ke layar */
         void draw(); /* Gambar ke layar*/
-        void moveX(int dx);                                         /* Move thing sepanjang dx */
-        void moveY(int dy);                                         /* Move thing sepanjang dy */
-        void move(int x0, int y0, int x1, int y1);
+        void moveX(int dx, int speed);                                         /* Move thing sepanjang dx */
+        void moveY(int dy, int speed);                                         /* Move thing sepanjang dy */
+        void move(int x0, int y0, int x1, int y1, int speed);
 };
 #endif

@@ -31,7 +31,7 @@ void Thing::draw()
     }
 }
 
-void Thing::moveX(int dx)
+void Thing::moveX(int dx, int speed)
 {
     int bx = Info::bytePerX;
     int by = Info::bytePerY;
@@ -48,21 +48,21 @@ void Thing::moveX(int dx)
                 memset(fbp + initial_location + (i * by), 0, bx);
             }
             offX++;
-            usleep(SPEED);
+            usleep(speed);
         } else {
             for (int i = 0; i < y; i++) {
                 memcpy(fbp + initial_location + (i * by) - move*bx, fbp + initial_location + (i * by), 4);
                 memset(fbp + initial_location + (i * by) + x*bx, 0, bx);
             }
             offX--;
-            usleep(SPEED);
+            usleep(speed);
         }
 
     }
 }
 
 
-void Thing::moveY(int dy)
+void Thing::moveY(int dy, int speed)
 {
     /* Lokasi awal / offset awal */
     int bx = Info::bytePerX;
@@ -81,7 +81,7 @@ void Thing::moveY(int dy)
             }
             memset(fbp + initial_location, 0, bx*x);
             offY++;
-            usleep(SPEED);
+            usleep(speed);
         } else if (dy < 0){
             finished_location = initial_location - (move *by);
             for (int i = 0; i < y; i++) {
@@ -89,7 +89,7 @@ void Thing::moveY(int dy)
             }
             memset(fbp + initial_location + (y * by), 0, bx*x);
             offY--;
-            usleep(SPEED);
+            usleep(speed);
         }
     }
 }
@@ -127,9 +127,43 @@ void Thing::addBox(Box *box)
     nBox++;
 }
 
-void Thing::move(int x0, int y0, int x1, int y1)
+void Thing::move(int x0, int y0, int x1, int y1, int speed)
 {
-    cout<<"Hahah";
+    /* Initial jarak dari x0 terhadap offset */
+    int dxOff = offX - x0;
+
+    /* Initial jarak dari y0 terhadap offset */
+    int dyOff = offY - y0;
+
+    int dx = abs(x1 - x0);
+    int dy = abs(y1 - y0);
+    int x, y;
+    int err, e2;
+
+    int sx = x0 < x1 ? 1:-1;
+    int sy = y0 < y1 ? 1:-1;
+    err = dx - dy; x = x0; y = y0;
+
+    int counter = 0;
+
+    int rgb[] = {0, 0, 0};
+
+    for (;; counter++) {
+        Drawer::drawPixel(offX - dxOff,offY - dyOff , rgb);
+        moveX(x - abs(offX - dxOff), speed);
+        moveY(y - abs(offY - dyOff), speed);
+        if (x == x1 && y == y1) break;
+        e2 = err << 1;
+        if (e2 > -dy) {
+            err -= dy;
+            x += sx;
+        }
+
+        if (e2 < dx) {
+            err += dx;
+            y += sy;
+        }
+    }
 }
 
 

@@ -20,8 +20,7 @@ int main()
 {
     initInfo();
 
-    Box b = {200, 200, 200, 300, {255, 255, 255}};
-    // Drawer::drawBox(&b);
+    Box b = {0, 0, 100, 100, {255, 255, 255}};
 
     Thing t;
     t.addBox(&b);
@@ -29,8 +28,8 @@ int main()
     Drawer::clearScreen();
 
     t.draw();
-    cout<<"x : "<<t.getX()<<endl;
-    t.moveX(100);
+
+    t.move(0, 0, 300, 300, 1000);
 
 
     Drawer::clearScreen();

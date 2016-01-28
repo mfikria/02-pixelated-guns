@@ -5,13 +5,13 @@
 
 using namespace std;
 
-void Drawer::drawPixel(int ix, int iy)
+void Drawer::drawPixel(int ix, int iy, int rgb[])
 {
     long int location = (ix+Info::vinfo.xoffset) * Info::bytePerX+ (iy+Info::vinfo.yoffset)*Info::bytePerY;
     if (Info::vinfo.bits_per_pixel == 32) {
-        *(Info::fbp + location) = 255;        // Some blue
-        *(Info::fbp + location + 1) = 255 ;     // A little green
-        *(Info::fbp + location + 2) = 255 ;    // A lot of red
+        *(Info::fbp + location) = rgb[2];        // Some blue
+        *(Info::fbp + location + 1) = rgb[1] ;     // A little green
+        *(Info::fbp + location + 2) = rgb[0] ;    // A lot of red
         *(Info::fbp + location + 3) = 0;      // No transparency
     } else  { //assume 16bpp
         int c = 10;
@@ -32,8 +32,10 @@ void Drawer::drawLine(int x0, int x1, int y0, int y1)
     int sx = x0 < x1 ? 1:-1;
     int sy = y0 < y1 ? 1:-1;
     err = dx - dy; x = x0; y = y0;
+
+    int color[] = {225, 225, 225};
     for (;;) {
-        drawPixel(x, y);
+        drawPixel(x, y, color);
         if (x == x1 && y == y1) break;
         e2 = err << 1;
         if (e2 > -dy) {
@@ -75,6 +77,6 @@ void Drawer::drawBox(Box *b)
 
 void Drawer::clearScreen()
 {
-    Box b = {Info::vinfo.xoffset, Info::vinfo.yoffset, Info::xres - 10, Info::yres - 10, {0, 0, 0}};
+    Box b = {(int)Info::vinfo.xoffset, (int)Info::vinfo.yoffset, Info::xres - 10, Info::yres - 10, {0, 0, 0}};
     Drawer::drawBox(&b);
 }
