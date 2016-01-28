@@ -9,7 +9,6 @@
 #include <string.h>
 
 #define MAX_BOX 4096
-#define min(x,y) x <= y ? x : y
 
 /* Global Variable and Macros */
 struct fb_var_screeninfo vinfo;         /* Var screen info */
@@ -28,169 +27,6 @@ typedef struct letter{
     box boxes[MAX_BOX];        /* Array of box */
     int count;                 /* Current count of boxes */
 } letter;
-
-
-void move_box_horizontal(box *b, letter *l, int cur_delta_x, int final_delta_x);
-void drawPixel(int ix, int iy);
-void drawLine(int x0, int x1, int y0, int y1);
-void move_box_vertical(box *b, letter *l, int cur_delta_y, int final_delta_y);
-
-
-int main()
-{
-    long int screensize = 0;
-
-    // Open the frame buffer file for reading and writing
-    fbfd = open("/dev/fb0", O_RDWR);
-    if (fbfd == -1) {
-        perror("Error: cannot open framebuffer device");
-        exit(1);
-    }
-    printf("The framebuffer device was opened successfully.\n");
-
-
-
-    // Get fixed screen information
-    if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo) == -1) {
-        perror("Error reading fixed information");
-        exit(2);
-    }
-
-
-    // Get variable screen information
-    if (ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo) == -1) {
-        perror("Error reading variable information");
-        exit(3);
-    }
-
-    printf("%dx%d, %dbpp\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel);
-
-    // Figure out the size of the screen in bytes
-    screensize = vinfo.xres * vinfo.yres * vinfo.bits_per_pixel / 8;
-
-    // Map the device to memory
-    fbp = (char *)mmap(0, screensize, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, 0);
-    if ((long int)fbp == -1) {
-        perror("Error: failed to map framebuffer device to memory");
-        exit(4);
-    }
-    printf("The framebuffer device was mapped to memory successfully.\n");
-
-    int x0, x1, y0, y1;
-    scanf("%d %d %d %d",&x0, &x1, &y0, &y1);
-
-    system("clear");
-    drawLine(x0, x1, y0, y1);
-
-
-    box line = {min(x0, x1), min(y0, y1), vinfo.xres - vinfo.xoffset, abs(y1-y0+1)};
-    move_box_horizontal(&line, NULL, 100, 100);
-
-    // Unmap the device from memory
-    munmap(fbp, screensize);
-    close(fbfd);
-
-    return 0;
-}
-
-void move_box_horizontal(box *b, letter *l, int cur_delta_x, int final_delta_x)
-{
-
-    if (cur_delta_x == 0)
-        return;
-
-    /*if (cur_delta_y % 15 == 0){
-      draw_update_letter(l, b->offsety);
-      }*/
-
-    /* Delta location jika offeset x/y di increment 1 */
-    int offsetx_location_inc = vinfo.bits_per_pixel / 8;
-    int offsety_location_inc = finfo.line_length;
-
-
-    /* Initial location berdasarkan offset x/y box */
-    int initial_offsetx_loc = offsetx_location_inc * vinfo.xoffset;
-    int initial_offsety_loc = offsety_location_inc * vinfo.yoffset;
-
-
-    /* Lokasi awal / offset awal */
-    long int initial_location = initial_offsetx_loc + ( b->offsetx * offsetx_location_inc )  + initial_offsety_loc + (b->offsety * offsety_location_inc);
-
-    /* finished_location : lokasi setelah iterasi ini berakhir */
-
-    int delta_location = 1;
-    if (final_delta_x > 0) {
-        int temp[b->x*4];
-        for (int i = 0; i < b->y; i++) {
-            memcpy(temp, fbp + initial_location + (i * offsety_location_inc), b->x*4);
-            memcpy(fbp + initial_location + (i * offsety_location_inc) + delta_location*4, temp, b->x*4);
-            memset(fbp + initial_location + (i * offsety_location_inc), 0, 4);
-        }
-    } else {
-        for (int i = 0; i < b->y; i++) {
-            memcpy(fbp + initial_location + (i * offsety_location_inc) + delta_location, fbp + initial_location + (i * offsety_location_inc), 4);
-            memset(fbp + initial_location + (i * offsety_location_inc) + b->x*4, 0, 4);
-        }
-    }
-
-    if (final_delta_x> 0) {
-        b->offsetx ++;
-        usleep(30000);
-        move_box_horizontal(b, l, cur_delta_x - 1, final_delta_x);
-    } else {
-        b->offsetx --;
-        usleep(30000);
-        move_box_horizontal(b, l, cur_delta_x + 1, final_delta_x);
-    }
-}
-
-void move_box_vertical(box *b, letter *l, int cur_delta_y, int final_delta_y)
-{
-    if (cur_delta_y == 0)
-        return;
-
-    /*if (cur_delta_y % 15 == 0){
-      draw_update_letter(l, b->offsety);
-      }*/
-
-    /* Delta location jika offeset x/y di increment 1 */
-    int offsetx_location_inc = vinfo.bits_per_pixel / 8;
-    int offsety_location_inc = finfo.line_length;
-
-    /* Initial location berdasarkan offset x/y box */
-    int initial_offsetx_loc = offsetx_location_inc * vinfo.xoffset;
-    int initial_offsety_loc = offsety_location_inc * vinfo.yoffset;
-
-
-    /* Lokasi awal / offset awal */
-    long int initial_location = initial_offsetx_loc + ( b->offsetx * offsetx_location_inc )  + initial_offsety_loc + (b->offsety * offsety_location_inc);
-
-    /* finished_location : lokasi setelah iterasi ini berakhir */
-    if (final_delta_y > 0) {
-        long int finished_location = initial_location + (1 * offsety_location_inc);
-        for (int i = b->y - 1; i >= 0; i--) {
-            memcpy(fbp + finished_location + (i * offsety_location_inc), fbp + initial_location + (i * offsety_location_inc), b->x*4);
-        }
-        memset(fbp + initial_location, 0, 4*b->x);
-    } else {
-        long int finished_location = initial_location - (1 *offsety_location_inc);
-        for (int i = 0; i < b->y; i++) {
-            memcpy(fbp + finished_location + (i * offsety_location_inc), fbp + initial_location + (i * offsety_location_inc), b->x*4);
-        }
-        memset(fbp + initial_location + (b->y * offsety_location_inc), 0, 4*b->x);
-
-    }
-
-    if (final_delta_y > 0) {
-        b->offsety ++;
-        usleep(30000);
-        move_box_vertical(b, l, cur_delta_y - 1, final_delta_y);
-    } else {
-        b->offsety --;
-        usleep(30000);
-        move_box_vertical(b, l, cur_delta_y + 1, final_delta_y);
-    }
-}
 
 void drawPixel(int ix, int iy) {
     long int location = (ix+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (iy+vinfo.yoffset)*finfo.line_length;
@@ -232,3 +68,108 @@ void drawLine(int x0, int x1, int y0, int y1) {
         }
     }
 }
+
+int main(int argc, char const *argv[])
+{
+    long int screensize = 0;
+
+    // Open the frame buffer file for reading and writing
+    fbfd = open("/dev/fb0", O_RDWR);
+    if (fbfd == -1) {
+        perror("Error: cannot open framebuffer device");
+        exit(1);
+    }
+    printf("The framebuffer device was opened successfully.\n");
+
+    // Get fixed screen information
+    if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo) == -1) {
+        perror("Error reading fixed information");
+        exit(2);
+    }
+
+
+    // Get variable screen information
+    if (ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo) == -1) {
+        perror("Error reading variable information");
+        exit(3);
+    }
+
+    printf("%dx%d, %dbpp\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel);
+
+    // Figure out the size of the screen in bytes
+    screensize = vinfo.xres * vinfo.yres * vinfo.bits_per_pixel / 8;
+
+    // Map the device to memory
+    fbp = (char *)mmap(0, screensize, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, 0);
+    if ((long int)fbp == -1) {
+        perror("Error: failed to map framebuffer device to memory");
+        exit(4);
+    }
+    printf("The framebuffer device was mapped to memory successfully.\n");
+
+	int x0, x1, y0, y1;
+	scanf("%d %d %d %d",&x0, &x1, &y0, &y1);
+
+	system("clear");
+    drawLine(x0, x1, y0, y1);
+
+    box line = {vinfo.xoffset, y0, abs(vinfo.xoffset-vinfo.xres), abs(y1-y0+1)};
+    move_box(&line, NULL, 100, 100);
+
+    // Unmap the device from memory
+    munmap(fbp, screensize);
+    close(fbfd);
+
+    return 0;
+}
+void move_box(box *b, letter *l, int cur_delta_y, int final_delta_y)
+{
+    if (cur_delta_y == 0)
+        return;
+
+    /*if (cur_delta_y % 15 == 0){
+      draw_update_letter(l, b->offsety);
+      }*/
+
+    /* Delta location jika offeset x/y di increment 1 */
+    int offsetx_location_inc = vinfo.bits_per_pixel / 8;
+    int offsety_location_inc = finfo.line_length;
+
+    /* Initial location berdasarkan offset x/y box */
+    int initial_offsetx_loc = offsetx_location_inc * vinfo.xoffset;
+    int initial_offsety_loc = offsety_location_inc * vinfo.yoffset;
+
+
+    /* Lokasi awal / offset awal */
+    long int initial_location = initial_offsetx_loc + ( b->offsetx * offsetx_location_inc )  + initial_offsety_loc + (b->offsety * offsety_location_inc);
+
+    /* finished_location : lokasi setelah iterasi ini berakhir */
+
+    if (final_delta_y > 0) {
+        long int finished_location = initial_location + (1 * offsety_location_inc);
+        for (int i = b->y - 1; i >= 0; i--) {
+            memcpy(fbp + finished_location + (i * offsety_location_inc), fbp + initial_location + (i * offsety_location_inc), b->x*4);
+        }
+        memset(fbp + initial_location, 0, 4*b->x);
+    } else {
+        long int finished_location = initial_location - (2 *offsety_location_inc);
+        for (int i = 0; i < b->y; i++) {
+            memcpy(fbp + finished_location + (i * offsety_location_inc), fbp + initial_location + (i * offsety_location_inc), b->x*4);
+        }
+        memset(fbp + initial_location + (b->y * offsety_location_inc), 0, 4*b->x);
+
+    }
+
+
+    if (final_delta_y > 0) {
+        b->offsety ++;
+        usleep(30000);
+        move_box(b, l, cur_delta_y - 1, final_delta_y);
+    } else {
+        b->offsety --;
+        usleep(30000);
+        move_box(b, l, cur_delta_y + 1, final_delta_y);
+    }
+
+}
+
