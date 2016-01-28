@@ -45,7 +45,7 @@ void Thing::moveX(int dx)
             for (int i = 0; i < y; i++) {
                 memcpy(temp, fbp + initial_location + (i * by), x*bx);
                 memcpy(fbp + initial_location + (i * by) + move*bx, temp, x*bx);
-                memset(fbp + initial_location + (i * by), 50, bx);
+                memset(fbp + initial_location + (i * by), 0, bx);
             }
             offX++;
             usleep(SPEED);
@@ -125,6 +125,11 @@ void Thing::addBox(Box *box)
     y = maxY - minY;
 
     nBox++;
+}
+
+void Thing::move(int x0, int y0, int x1, int y1)
+{
+    cout<<"Hahah";
 }
 
 

@@ -95,6 +95,7 @@ int main()
 
 void move_box_horizontal(box *b, letter *l, int cur_delta_x, int final_delta_x)
 {
+
     if (cur_delta_x == 0)
         return;
 

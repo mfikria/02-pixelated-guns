@@ -72,3 +72,9 @@ void Drawer::drawBox(Box *b)
         }
     }
 }
+
+void Drawer::clearScreen()
+{
+    Box b = {Info::vinfo.xoffset, Info::vinfo.yoffset, Info::xres - 10, Info::yres - 10, {0, 0, 0}};
+    Drawer::drawBox(&b);
+}

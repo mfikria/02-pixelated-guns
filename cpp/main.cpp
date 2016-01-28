@@ -26,10 +26,14 @@ int main()
     Thing t;
     t.addBox(&b);
 
+    Drawer::clearScreen();
+
     t.draw();
     cout<<"x : "<<t.getX()<<endl;
-    t.moveX(-100);
+    t.moveX(100);
 
+
+    Drawer::clearScreen();
     // Unmap the device from memory
     munmap(Info::fbp, Info::screensize);
     close(Info::fbfd);
