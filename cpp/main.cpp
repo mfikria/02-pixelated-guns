@@ -34,6 +34,8 @@ int main()
 
 
     Drawer::clearScreen();
+
+    Drawer::drawCircle(3, 4, 5);
     // Unmap the device from memory
     munmap(Info::fbp, Info::screensize);
     close(Info::fbfd);

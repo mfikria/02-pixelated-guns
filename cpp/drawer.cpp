@@ -22,6 +22,20 @@ void Drawer::drawPixel(int ix, int iy)
     }
 }
 
+void Drawer::drawCircle(int xm, int ym, int r)
+{   
+    int x = -r, y = 0, err = 2-2*r; /* II. Quadrant */ 
+    do {
+        drawPixel(xm-x+200, ym+y+200); /*   I. Quadrant */
+        drawPixel(xm-y+200, ym-x+200); /*  II. Quadrant */
+        drawPixel(xm+x+200, ym-y+200); /* III. Quadrant */
+        drawPixel(xm+y+200, ym+x+200); /*  IV. Quadrant */
+        r = err;
+        if (r <= y) err += ++y*2+1;           /* e_xy+e_y < 0 */
+        if (r > x || err > y) err += ++x*2+1; /* e_xy+e_x > 0 or no 2nd y-step */
+    } while (x < 0);
+}
+
 void Drawer::drawLine(int x0, int x1, int y0, int y1)
 {
     int dx = abs(x1 - x0);
@@ -78,3 +92,4 @@ void Drawer::clearScreen()
     Box b = {Info::vinfo.xoffset, Info::vinfo.yoffset, Info::xres - 10, Info::yres - 10, {0, 0, 0}};
     Drawer::drawBox(&b);
 }
+
